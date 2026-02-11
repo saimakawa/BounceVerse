@@ -1,27 +1,34 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const message = document.getElementById("message");
+const restartBtn = document.getElementById("restartBtn");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-
-let small = {
-  x: 100,
-  y: 100,
-  radius: 30,
-  dx: 4,
-  dy: 3,
-  color: "cyan",
-};
 
 let big = {
   x: canvas.width / 2,
   y: canvas.height / 2,
   radius: 120,
-  dx: 2,
-  dy: 2,
   color: "orange",
 };
+
+let small;
+
+function initSmallCircle() {
+  small = {
+    x: 100,
+    y: 100,
+    radius: 30,
+    dx: 4,
+    dy: 3,
+    color: "cyan",
+    collided: false,
+  };
+  message.textContent = "";
+}
+
+initSmallCircle();
 
 function drawCircle(circle) {
   ctx.beginPath();
@@ -52,36 +59,31 @@ function checkCollision() {
   let dy = small.y - big.y;
   let distance = Math.sqrt(dx * dx + dy * dy);
 
-  if (distance <= small.radius + big.radius) {
+  if (distance <= small.radius + big.radius && !small.collided) {
+    small.collided = true;
     small.color = "red";
-    big.color = "yellow";
-
     message.textContent = "Collision Happened!";
 
-    let tempDx = small.dx;
-    let tempDy = small.dy;
+    let angle = Math.atan2(dy, dx);
 
-    small.dx = big.dx;
-    small.dy = big.dy;
+    small.x = big.x + (big.radius + small.radius) * Math.cos(angle);
+    small.y = big.y + (big.radius + small.radius) * Math.sin(angle);
 
-    big.dx = tempDx;
-    big.dy = tempDy;
+    small.dx = 0;
+    small.dy = 0;
   }
 }
 
 function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  small.x += small.dx;
-  small.y += small.dy;
+  if (!small.collided) {
+    small.x += small.dx;
+    small.y += small.dy;
 
-  big.x += big.dx;
-  big.y += big.dy;
-
-  wallBounce(small);
-  wallBounce(big);
-
-  checkCollision();
+    wallBounce(small);
+    checkCollision();
+  }
 
   drawCircle(big);
   drawCircle(small);
@@ -90,3 +92,11 @@ function update() {
 }
 
 update();
+
+restartBtn.addEventListener("click", function () {
+  initSmallCircle();
+});
+
+canvas.addEventListener("click", function () {
+  initSmallCircle();
+});
